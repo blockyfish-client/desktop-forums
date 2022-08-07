@@ -35,7 +35,7 @@ const createWindow = () => {
         }
     }, 250)
     win.webContents.on('did-finish-load', function() {
-        win.webContents.openDevTools()
+        // win.webContents.openDevTools()
         win.webContents.setBackgroundThrottling(false)
         win.webContents.executeJavaScript(`
         setInterval(function() {
