@@ -59,7 +59,7 @@ const createWindow = () => {
             if (modal_title.innerText == 'Forum') {
                 forum_modal.style.maxHeight = '100vh'
                 forum_modal.style.margin = '0px'
-                forum_modal.style.padding = '0px'
+                forum_modal.style.padding = '5px'
                 forum_modal.style.borderRadius = '0px'
                 forum_modal.style.height = '100vh'
                 forum_modal.style.width = '100vw'
@@ -89,7 +89,23 @@ const createWindow = () => {
         win.webContents.executeJavaScript(`
         const drag = document.createElement('div')
         document.body.insertBefore(drag, document.body.children[0])
-        drag.outerHTML = '<div style="-webkit-app-region: drag;width: 100vw;height: 20px;position: absolute;top: 0;left: 0;cursor: move;"></div>'
+        drag.outerHTML = '<div style="-webkit-app-region: drag;width: 100vw;height: 40px;position: absolute;top: 0;left: 0;cursor: move;"></div>'
+        `)
+        win.webContents.executeJavaScript(`
+        function isInViewport(e) {
+            const rect = e.getBoundingClientRect();
+            return (
+                rect.top >= 0 &&
+                rect.left >= 0 &&
+                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+            );
+        }
+        document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div').addEventListener("scroll", function() {
+            if (isInViewport(document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div > div.footer > button'))) {
+                document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div > div.footer > button').click()
+            }
+        })
         `)
         win.webContents.on("console-message", (ev, level, message, line, file) => {
             var msg = `${message}`
