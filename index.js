@@ -29,7 +29,9 @@ const createWindow = () => {
     win.removeMenu();
     setInterval(function() {
         if (win.webContents.getURL() == 'https://beta.deeeep.io/') {
-            win.loadURL('https://beta.deeeep.io/forum/en')
+            // win.loadURL('https://beta.deeeep.io/forum/en')
+            win.webContents.goBack()
+            win.webContents.goBack()
         }
     }, 250)
     win.webContents.on('did-finish-load', function() {
@@ -52,19 +54,28 @@ const createWindow = () => {
             var forum_modal = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div')
             var modal_title = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > span > div.justify-self-center')
             var modal_close = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > button')
+            var background = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__overlay.vfm--overlay.vfm--absolute.vfm--inset')
             modal_close.style.webkitAppRegion = 'no-drag'
             if (modal_title.innerText == 'Forum') {
                 forum_modal.style.maxHeight = '100vh'
                 forum_modal.style.margin = '0px'
                 forum_modal.style.padding = '0px'
                 forum_modal.style.borderRadius = '0px'
+                forum_modal.style.height = '100vh'
+                forum_modal.style.width = '100vw'
             }
             else {
                 forum_modal.style.maxHeight = ''
                 forum_modal.style.margin = ''
                 forum_modal.style.padding = ''
                 forum_modal.style.borderRadius = ''
+                forum_modal.style.height = ''
+                forum_modal.style.width = ''
             }
+            background.style.backgroundImage = 'url(https://beta.deeeep.io/img/dpbg6.png)'
+            background.style.backgroundSize = 'cover'
+            background.style.backgroundPosition = 'bottom'
+            background.style.filter = 'brightness(0.8)'
             if (modalCloseEvent == false && modal_close != null) {
                 modal_close.addEventListener("mouseup", () => {
                     if (modal_title.innerText == 'Forum') {

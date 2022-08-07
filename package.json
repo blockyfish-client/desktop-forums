@@ -1,7 +1,7 @@
 {
-  "name": "deeeep.io-beta-client",
+  "name": "deeeep.io-forums",
   "version": "1.0.0",
-  "description": "A custom desktop client for deeeep.io v4 with some improvements",
+  "description": "Desktop app for deeeep.io forums",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
