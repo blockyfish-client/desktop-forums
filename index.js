@@ -1,11 +1,22 @@
-const { app, BrowserWindow, session, globalShortcut } = require('electron')
+const { app, globalShortcut, session, Tray, Menu } = require('electron')
+
+let isSingleInstance = app.requestSingleInstanceLock()
+if (!isSingleInstance) {
+    console.log('app exists!')
+    app.quit()
+}
+
 const path = require('path')
 const { shell } = require("electron")
 const { ElectronBlocker } = require('@cliqz/adblocker-electron')
-const fetch = require('cross-fetch') // required 'fetch'
+const fetch = require('cross-fetch')
 
 const { PARAMS, VALUE,  MicaBrowserWindow } = require('mica-electron');
 app.commandLine.appendSwitch("enable-transparent-visuals");
+
+process.on("uncaughtException", () => {
+    console.log('something really bad happened!')
+})
 
 ElectronBlocker.fromPrebuiltAdsAndTracking(fetch).then((blocker) => {
   blocker.enableBlockingInSession(session.defaultSession);
@@ -19,6 +30,8 @@ const createWindow = () => {
     const win = new MicaBrowserWindow({
         width: 1080,
         height: 720,
+        minWidth: 640,
+        minHeight: 480,
         show: false,
         webPreferences: {
             nodeIntegration: true,
@@ -26,10 +39,55 @@ const createWindow = () => {
         frame: false,
         icon: path.join(__dirname, 'img/icon.png'),
 
-        effect: PARAMS.BACKGROUND.MICA,
-        theme: VALUE.THEME.DARK,
+        effect: PARAMS.BACKGROUND.AUTO,
+        theme: VALUE.THEME.AUTO,
         autoHideMenuBar: true,
     })
+
+    app.on('second-instance', (event, argv, cwd) => {
+        if (win) {
+          if (win.isMinimized()) win.restore()
+          win.focus()
+      }
+    })
+
+    let isQuiting;
+    let tray;
+    
+    app.on('before-quit', function () {
+      isQuiting = true;
+    });
+
+    tray = new Tray(path.join(__dirname, 'img/icon16.png'));
+    tray.setToolTip('Deeeep.io Forums')
+    tray.setContextMenu(Menu.buildFromTemplate([
+        {
+            label: 'Deeeep.io Forums',
+            icon: path.join(__dirname, 'img/icon16.png'),
+            enabled: false
+        },
+        {
+            type: 'separator'
+        },
+        {
+            label: 'Quit', click: function () {
+                isQuiting = true;
+                app.quit();
+            }
+        }
+    ]));
+    tray.on('click', () => {
+        win.show();
+        win.focus();
+    })  
+
+    win.on('close', function (event) {
+        if (!isQuiting) {
+            event.preventDefault();
+            win.hide();
+            event.returnValue = false;
+        }
+    });
 
     win.loadURL('https://beta.deeeep.io/login?return=%2Fforum%2Fen')
     // win.loadFile(path.join(__dirname, 'index.html'))
@@ -42,11 +100,11 @@ const createWindow = () => {
         }
     }, 250)
     win.webContents.on('did-finish-load', function() {
-        win.webContents.openDevTools()
+        // win.webContents.openDevTools()
+
         globalShortcut.register('Shift+CommandOrControl+I', () => {
             win.webContents.toggleDevTools()
-          })
-        win.webContents.setBackgroundThrottling(false)
+        })
 
         win.webContents.executeJavaScript(`
         const titlebar_html = document.createElement('div')
@@ -55,7 +113,7 @@ const createWindow = () => {
     
         const titlebar_style = document.createElement('style')
         document.querySelector('head').appendChild(titlebar_style)
-        titlebar_style.innerHTML = '@media (-webkit-device-pixel-ratio:1.5),(device-pixel-ratio:1.5),(-webkit-device-pixel-ratio:2),(device-pixel-ratio:2),(-webkit-device-pixel-ratio:3),(device-pixel-ratio:3){#window-controls .icon{width:10px;height:10px}}#window-controls{z-index: 9999999999999999;color:#fff;display:grid;grid-template-columns:repeat(3,46px);position:absolute;top:0;right:5px;height:32px;-webkit-app-region:no-drag}#window-controls .button{grid-row:1/span 1;display:flex;justify-content:center;align-items:center;width:50px;height:100%;user-select:none}#min-button{grid-column:1}#max-button,#restore-button{grid-column:2}#close-button{grid-column:3}#window-controls .button:hover{background:rgba(255,255,255,.1)}#window-controls .button:active{background:rgba(255,255,255,.2)}#close-button:hover{background:#e81123!important}#close-button:active{background:#bb111f!important}'
+        titlebar_style.innerHTML = '@media (-webkit-device-pixel-ratio:1.5),(device-pixel-ratio:1.5),(-webkit-device-pixel-ratio:2),(device-pixel-ratio:2),(-webkit-device-pixel-ratio:3),(device-pixel-ratio:3){#window-controls .icon{width:10px;height:10px}}#window-controls{z-index:9999999999999999;color:#fff;display:grid;grid-template-columns:repeat(3,46px);position:absolute;top:0;right:5px;height:32px;-webkit-app-region:no-drag}#window-controls .button{grid-row:1/span 1;display:flex;justify-content:center;align-items:center;width:50px;height:100%;user-select:none}#min-button{grid-column:1}#max-button,#restore-button{grid-column:2}#close-button{grid-column:3}#window-controls .button:hover{background:rgba(127,127,127,.1)}#window-controls .button:active{background:rgba(127,127,127,.2)}#close-button:hover{background:#e81123!important}#close-button:active{background:#bb111f!important}'
     
         document.getElementById("max-button").addEventListener("click", () => {
             document.getElementById("max-button").style.display = "none"
@@ -74,6 +132,20 @@ const createWindow = () => {
             console.log('window_action: cls')
         })
         `)
+        setInterval(() => {
+            if (win.isMaximized()) {
+                win.webContents.executeJavaScript(`
+                document.getElementById("max-button").style.display = "none"
+                document.getElementById("restore-button").style.display = ""
+                `)
+            }
+            else {
+                win.webContents.executeJavaScript(`
+                document.getElementById("max-button").style.display = ""
+                document.getElementById("restore-button").style.display = "none"
+                `)
+            }
+        }, 300);
 
         win.webContents.executeJavaScript(`
         setInterval(function() {
@@ -85,18 +157,88 @@ const createWindow = () => {
             }
         }, 5000)
         `)
-        
         win.webContents.executeJavaScript(`
+        const custom_css = document.createElement('style')
+        document.body.appendChild(custom_css)
+        custom_css.innerHTML = "textarea {background: #0003 !important;}"
+        `)
+
+        win.webContents.executeJavaScript(`
+        function setTheme() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                document.querySelector('html').classList.add('dark')
+                document.querySelectorAll('.popover--light').forEach(popoverdark => {
+                    popoverdark.classList.remove('popover--light')
+                    popoverdark.classList.add('popover--dark')
+                });
+                document.querySelectorAll('button.white').forEach(graybutton => {
+                    graybutton.classList.remove('white')
+                    graybutton.classList.add('gray')
+                });
+                document.querySelectorAll('button.was-el-button--text.white').forEach(whitetextbutton => {
+                    whitetextbutton.classList.remove('was-el-button--text')
+                    whitetextbutton.classList.add('el-button--text')
+                }); 
+                document.getElementById("max-button").style.filter = 'invert(0)'
+                document.getElementById("min-button").style.filter = 'invert(0)'
+                document.getElementById("restore-button").style.filter = 'invert(0)' 
+                document.getElementById("close-button").style.filter = 'invert(0) hue-rotate(0deg)'            
+            }
+            else {
+                document.querySelector('html').classList.remove('dark')
+                document.querySelectorAll('.popover--dark').forEach(popoverdark => {
+                    popoverdark.classList.remove('popover--dark')
+                    popoverdark.classList.add('popover--light')
+                });
+                document.querySelectorAll('button.gray').forEach(graybutton => {
+                    graybutton.classList.remove('gray')
+                    graybutton.classList.add('white')
+                });
+                document.querySelectorAll('button.el-button--text.white').forEach(whitetextbutton => {
+                    whitetextbutton.classList.remove('el-button--text')
+                    whitetextbutton.classList.add('was-el-button--text')
+                });
+                document.getElementById("max-button").style.filter = 'invert(1)'
+                document.getElementById("min-button").style.filter = 'invert(1)'
+                document.getElementById("restore-button").style.filter = 'invert(1)' 
+                document.getElementById("close-button").style.filter = 'invert(1) hue-rotate(180deg) brightness(0.5) saturate(5)'  
+            }
+        }
+        setTimeout(() => {
+            setTheme()
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+                setTheme()
+            });
+        }, 500);
+        setInterval(() => {
+            setTheme()
+        }, 200)
+
         document.querySelector('#app > div.ui').remove()
         
         setInterval(function() {
             var forum_modal = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div')
             var modal_title = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > span > div.justify-self-center')
+            var modal_titlebar = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > span')
+            var back_button = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > span > button:nth-child(1)')
             var background = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__overlay.vfm--overlay.vfm--absolute.vfm--inset')
             var modal_close = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > button')
+            
             var forum_page = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div')
             var forum_post_page = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div')
+            
             var profile_background = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div.content')
+            var profile_play_bg = document.querySelectorAll('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div.content > div.inner > div > div')
+
+            var notif_container = document.querySelector('#el-popper-container-1869 > div.el-popper.is-light.el-popover.popover--no-padding.popover--dark')
+            var notif_body = document.querySelector('#el-popper-container-1869 > div.el-popper.is-light.el-popover.popover--no-padding.popover--dark > div')
+
+            var nav_bar = document.querySelector('#app > div.vfm.vfm--inset.vfm--fixed.modal > div.vfm__container.vfm--absolute.vfm--inset.vfm--outline-none.modal-container > div > div > div > div > div.nav-bar')
+
+            modal_titlebar.style.height = '33.82px'
+            if (back_button) {
+                back_button.style.webkitAppRegion = 'none'
+            }
 
             // mica effect
             document.body.style.background = 'none'
@@ -106,6 +248,35 @@ const createWindow = () => {
             if (profile_background) {
                 profile_background.style.background = 'none'
             }
+            if (profile_play_bg) {
+                profile_play_bg.forEach(bg => {
+                    bg.style.background = 'none'
+                })
+            }
+            if (notif_container) {
+                notif_container.style.background = '#888d'
+                notif_container.style.backdropFilter = 'blur(5px)'
+                notif_body.style.background = 'none'
+            }
+            
+            // sticky navbar
+            if (nav_bar) {
+                Object.assign(nav_bar.style, 
+                    {
+                        position: 'sticky',
+                        top: '0',
+                        zIndex: '999999'
+                    }
+                )
+            };
+            Object.assign(forum_post_page.style,
+                {
+                    background: 'none',
+                    top: '0',
+                    height: 'max-content',
+                    minHeight: 'max-content'
+                }
+            );
             
             if (modal_close) {
                 modal_close.remove()
@@ -129,13 +300,10 @@ const createWindow = () => {
             }
         }, 100)
         `)
-
-
-
         win.webContents.executeJavaScript(`
         const drag = document.createElement('div')
         document.body.insertBefore(drag, document.body.children[0])
-        drag.outerHTML = '<div style="-webkit-app-region: drag;width: 100vw;height: 40px;position: absolute;top: 0;left: 0;cursor: move;"></div>'
+        drag.outerHTML = '<div style="-webkit-app-region: drag;width: 100vw;height: 32px;position: absolute;top: 0;left: 0;cursor: move;"></div>'
         `)
         win.webContents.executeJavaScript(`
         function isInViewport(e) {
@@ -159,7 +327,7 @@ const createWindow = () => {
         `)
         win.webContents.on("console-message", (ev, level, message, line, file) => {
             var msg = `${message}`
-            // console.log(msg);
+            console.log(msg);
 
             if (matches(msg, "window_action:")) {
                 msg = msg.replace("window_action: ", "")
