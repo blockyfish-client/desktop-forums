@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "rebuild": ".\\node_modules\\.bin\\electron-rebuild",
-    "make-win": "npx electron-packager . Deeeepio-Forums --overwrite --platform=win32 --arch=x64 --icon=img/icons/win/icon.ico --prune=true --electron-version=10.4.7 --app-copyright=\"Pi 2022\" --out=release-builds --version-string.CompanyName=Pi --version-string.ProductName=\"Deeeep.io Forums\"",
+    "make-win": "npx electron-packager . Deeeepio-Forums --asar --overwrite --platform=win32 --arch=x64 --icon=img/icons/win/icon.ico --prune=true --app-copyright=\"Pi 2022\" --out=release-builds --version-string.CompanyName=Pi --version-string.ProductName=\"Deeeep.io Forums\"",
     "pack-win": "node installers/windows/createinstaller.js"
   },
   "author": "pi",

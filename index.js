@@ -58,44 +58,6 @@ const createWindow = () => {
       }
     })
 
-    let isQuiting;
-    let tray;
-    
-    app.on('before-quit', function () {
-      isQuiting = true;
-    });
-
-    tray = new Tray(path.join(__dirname, 'img/icon16.png'));
-    tray.setToolTip('Deeeep.io Forums')
-    tray.setContextMenu(Menu.buildFromTemplate([
-        {
-            label: 'Deeeep.io Forums',
-            icon: path.join(__dirname, 'img/icon16.png'),
-            enabled: false
-        },
-        {
-            type: 'separator'
-        },
-        {
-            label: 'Quit', click: function () {
-                isQuiting = true;
-                app.quit();
-            }
-        }
-    ]));
-    tray.on('click', () => {
-        win.show();
-        win.focus();
-    })  
-
-    win.on('close', function (event) {
-        if (!isQuiting) {
-            event.preventDefault();
-            win.hide();
-            event.returnValue = false;
-        }
-    });
-
     win.loadURL('https://beta.deeeep.io/login?return=%2Fforum%2Fen')
     // win.loadFile(path.join(__dirname, 'index.html'))
     win.removeMenu();
@@ -341,7 +303,7 @@ const createWindow = () => {
                 if (msg == "max") win.maximize()
                 else if (msg == "res") win.unmaximize()
                 else if (msg == "min") win.minimize()
-                else if (msg == "cls") win.close()
+                else if (msg == "cls") app.quit()
             }
 
             if (matches(msg, "notifs:")) {
