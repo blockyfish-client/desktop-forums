@@ -49,6 +49,7 @@ const createWindow = () => {
         theme: VALUE.THEME.AUTO,
         autoHideMenuBar: true,
     })
+    win.setTitle('Deeeep.io Forums')
 
     app.on('second-instance', (event, argv, cwd) => {
         if (win) {

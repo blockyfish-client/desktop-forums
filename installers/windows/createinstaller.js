@@ -19,7 +19,7 @@ function getInstallerConfig () {
     authors: 'Pi',
     noMsi: true,
     outputDirectory: path.join(outPath, 'windows-installer'),
-    exe: 'Blockyfish.exe',
+    exe: 'Deeeepio-Forums.exe',
     setupExe: 'Pi-deeeepioforums-setup-v' + version + '.exe',
     setupIcon: path.join(rootPath, 'img', 'icons', 'win', 'icon.ico'),
     iconUrl: "https://raw.githubusercontent.com/blockyfish-client/Desktop-Forums/master/img/icons/win/icon.ico",
