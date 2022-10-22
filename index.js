@@ -25,7 +25,7 @@ const createWindow = () => {
         icon: path.join(__dirname, 'img/icon.png'),
     })
 
-    win.loadURL('https://beta.deeeep.io/forum/en')
+    win.loadURL('https://beta.deeeep.io/login?return=%2Fforum%2Fen')
     win.removeMenu();
     setInterval(function() {
         if (win.webContents.getURL() == 'https://beta.deeeep.io/') {
@@ -35,7 +35,7 @@ const createWindow = () => {
         }
     }, 250)
     win.webContents.on('did-finish-load', function() {
-        // win.webContents.openDevTools()
+        win.webContents.openDevTools()
         win.webContents.setBackgroundThrottling(false)
         win.webContents.executeJavaScript(`
         setInterval(function() {
@@ -45,7 +45,7 @@ const createWindow = () => {
             else {
                 console.log("notifs: 0")
             }
-        }, 1000)
+        }, 5000)
         `)
         win.webContents.executeJavaScript(`
         document.querySelector('#app > div.ui').remove()
