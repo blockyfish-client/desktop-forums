@@ -20,7 +20,7 @@
     "mica-electron": "^1.1.5"
   },
   "devDependencies": {
-    "electron": "^10.4.7",
+    "electron": "^21.2.0",
     "electron-packager": "^17.0.0",
     "electron-winstaller": "^5.1.0"
   }
