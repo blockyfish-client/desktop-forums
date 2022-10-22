@@ -1,3 +1,9 @@
+// checks if the app is being run as an installer
+const setupEvents = require('./installers/setupEvents')
+ if (setupEvents.handleSquirrelEvent()) {
+    return;
+}
+
 const { app, globalShortcut, session, Tray, Menu } = require('electron')
 
 let isSingleInstance = app.requestSingleInstanceLock()
