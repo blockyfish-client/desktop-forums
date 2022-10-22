@@ -356,7 +356,9 @@ const createWindow = () => {
             }
         });
 
-        win.show()
+        setTimeout(() => {
+            win.show()
+        }, 500);
 
         win.webContents.on('new-window', function(e, url) {
             e.preventDefault();
